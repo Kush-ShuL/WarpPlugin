@@ -1,0 +1,80 @@
+package top.mc_plfd_host.warpPlugin.Commands;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import top.mc_plfd_host.warpPlugin.WarpPlugin;
+
+import java.util.Objects;
+
+public class Warp implements CommandExecutor {
+    private static @Nullable Location getWarpLocation(String warpName, String worldName) {
+        try {
+            World world = Bukkit.getWorld(worldName);
+            if (world == null) return null;
+
+            double x = Double.parseDouble(WarpPlugin.getData("warps." + warpName + ".x"));
+            double y = Double.parseDouble(WarpPlugin.getData("warps." + warpName + ".y"));
+            double z = Double.parseDouble(WarpPlugin.getData("warps." + warpName + ".z"));
+            float yaw = Float.parseFloat(WarpPlugin.getData("warps." + warpName + ".yaw"));
+            float pitch = Float.parseFloat(WarpPlugin.getData("warps." + warpName + ".pitch"));
+
+            return new Location(world, x, y, z, yaw, pitch);
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("[WarpPlugin] " + e.getMessage());
+            return null;
+        }
+    }
+
+
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
+        if (!(sender instanceof Player player)){
+            Bukkit.getLogger().warning(WarpPlugin.getMessages("player_only"));
+            return true;
+        }
+
+        if (args.length==0){
+            sender.sendMessage(WarpPlugin.getMessages("no_name"));
+            return true;
+        }
+
+        if (!(WarpPlugin.checkData("warps."+args[0]))){
+            sender.sendMessage(WarpPlugin.getMessages("not_find"));
+            return true;
+        }
+
+        String worldName = WarpPlugin.getData("warps." + args[0] + ".world");
+
+        if (sender.hasPermission("warpplugin.warpall")){
+            try {
+                player.teleport(Objects.requireNonNull(getWarpLocation(args[0], worldName)));
+                sender.sendMessage(WarpPlugin.getMessages("success"));
+                return true;
+            } catch (NullPointerException e) {
+                sender.sendMessage(WarpPlugin.getMessages("error"));
+                Bukkit.getLogger().warning("[WarpPlugin] " + e.getMessage());
+                return true;
+            }
+        }
+
+        if (sender.hasPermission("warpplugin.warp." + args[0])){
+            try {
+                player.teleport(Objects.requireNonNull(getWarpLocation(args[0], worldName)));
+                sender.sendMessage(WarpPlugin.getMessages("success"));
+            } catch (NullPointerException e) {
+                sender.sendMessage(WarpPlugin.getMessages("error"));
+                Bukkit.getLogger().warning("[WarpPlugin] " + e.getMessage());
+                return true;
+            }
+        } else {
+            sender.sendMessage(WarpPlugin.getMessages("no_perm"));
+        }
+        return true;
+    }
+}

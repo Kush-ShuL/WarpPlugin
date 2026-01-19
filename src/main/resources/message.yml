@@ -1,0 +1,27 @@
+admin_help: |
+  &6[WarpPlugin] &fManagement Help
+  &e/warpadmin setowner <name> <player> &7- Set warp owner
+  &e/warpadmin del <name> &7- Delete warp
+  &e/warpadmin list &7- List all warps
+
+no_perms: "&cYou don't have permission!"
+
+success: "&aSuccess!"
+
+not_find: "&cThis warp does not exist!"
+
+error: "&4An unknown error occurred, please contact the administrator!"
+
+no_name: "&c Name can't be empty!"
+
+player_only: "&cThis command can only be executed by a player!"
+
+list_warps: |
+  &7----------------
+  &7Owner:&a%owner% 
+  &7World:&b%world% 
+  &7Position:&e%pos% 
+  &7Name:&6%name%"
+  &7----------------
+
+no_data: "&cNo data found!"

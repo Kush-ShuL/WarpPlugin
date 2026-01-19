@@ -1,0 +1,35 @@
+name: WarpPlugin
+version: '1.0-SNAPSHOT'
+main: top.mc_plfd_host.warpPlugin.WarpPlugin
+api-version: '1.18'
+commands:
+  setwarp:
+    usage: "/setwarp [name]"
+    permission: warpplugin.set
+
+  warp:
+    usage: "/warp [name]"
+    permission: warpplugin.warpall
+
+  delwarp:
+    usage: "/delwarp [name]"
+    permission: warpplugin.delwarp
+
+  warpadmin:
+    usage: "/warpadmin"
+    permission: warpplugin.warpadmin
+
+
+permissions:
+  warpplugin.set:
+    description: Allows setting warp points
+    default: true
+  warpplugin.warpall:
+    description: Allows warping to warp points
+    default: true
+  warpplugin.delwarp:
+    description: Allows deleting warp points
+    default: true
+  warpplugin.warpadmin:
+    description: Allows managing warp points
+    default: op
