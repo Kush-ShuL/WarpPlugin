@@ -25,20 +25,13 @@ public class TabComplete implements TabCompleter{
 
         String commandName = command.getName().toLowerCase();
 
-        if (commandName.equals("warpadmin")) {
-            return completeAdminSubcommand(args);
-        }
+        return switch (commandName) {
+            case "warpadmin" -> completeAdminSubcommand(args);
+            case "warp", "delwarp" -> completeWarpName(args);
+            case "setwarp" -> completeSetWarp(args);
+            default -> new ArrayList<>();
+        };
 
-        if (commandName.equals("warp") ||
-                commandName.equals("delwarp")) {
-            return completeWarpName(args);
-        }
-
-        if (commandName.equals("setwarp")) {
-            return completeSetWarp(args);
-        }
-
-        return new ArrayList<>();
     }
 
     private List<String> completeAdminSubcommand(String @NotNull [] args) {
