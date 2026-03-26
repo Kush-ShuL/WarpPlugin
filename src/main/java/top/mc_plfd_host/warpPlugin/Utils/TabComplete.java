@@ -14,11 +14,14 @@ import java.util.List;
 
 public class TabComplete implements TabCompleter{
 
+    private CommandSender sender;
+
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender,
                                       @NotNull Command command,
                                       @NotNull String alias,
                                       String[] args) {
+        this.sender = sender;
 
         String commandName = command.getName().toLowerCase();
 
@@ -65,7 +68,15 @@ public class TabComplete implements TabCompleter{
 
         for (String warp : warps) {
             if (warp.toLowerCase().startsWith(args[args.length - 1].toLowerCase())) {
-                suggestions.add(warp);
+                boolean isPublic = WarpPlugin.checkData("warps." + warp + ".permission") && 
+                                   Boolean.parseBoolean(WarpPlugin.getData("warps." + warp + ".permission"));
+                boolean isCreator = sender.getName().equals(WarpPlugin.getData("warps." + warp + ".creator"));
+                
+                if (isPublic) {
+                    suggestions.add(warp);
+                } else if (isCreator) {
+                    suggestions.add(warp);
+                }
             }
         }
         return suggestions;

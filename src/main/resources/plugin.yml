@@ -4,7 +4,7 @@ main: top.mc_plfd_host.warpPlugin.WarpPlugin
 api-version: '1.18'
 commands:
   setwarp:
-    usage: "/setwarp [name]"
+    usage: "/setwarp [name] [isPublic]"
     permission: warpplugin.set
 
   warp:

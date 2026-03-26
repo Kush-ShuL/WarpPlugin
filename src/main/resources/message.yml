@@ -4,7 +4,11 @@ admin_help: |
   &e/warpadmin del <name> &7- Delete warp
   &e/warpadmin list &7- List all warps
 
-no_perms: "&cYou don't have permission!"
+no_perm: "&cYou don't have permission!"
+
+no_get_perm: "&c Perm can't be empty"
+
+perm_not_boolean: "&c Perm must be a boolean"
 
 success: "&aSuccess!"
 
