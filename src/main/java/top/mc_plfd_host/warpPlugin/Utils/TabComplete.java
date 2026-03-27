@@ -25,17 +25,13 @@ public class TabComplete implements TabCompleter{
 
         String commandName = command.getName().toLowerCase();
 
-        if (commandName.equals("warpadmin")) {
-            return completeAdminSubcommand(args);
-        }
+        return switch (commandName) {
+            case "warpadmin" -> completeAdminSubcommand(args);
+            case "warp", "delwarp" -> completeWarpName(args);
+            case "setwarp" -> completeSetWarp(args);
+            default -> new ArrayList<>();
+        };
 
-        if (commandName.equals("warp") ||
-                commandName.equals("setwarp") ||
-                commandName.equals("delwarp")) {
-            return completeWarpName(args);
-        }
-
-        return new ArrayList<>();
     }
 
     private List<String> completeAdminSubcommand(String @NotNull [] args) {
@@ -80,6 +76,32 @@ public class TabComplete implements TabCompleter{
             }
         }
         return suggestions;
+    }
+
+    private @NotNull List<String> completeSetWarp(String[] args) {
+        if (args.length == 1) {
+            List<String> suggestions = new ArrayList<>();
+            suggestions.add("[WarpName]");
+            return suggestions;
+        }
+
+        if (args.length == 2) {
+            List<String> suggestions = new ArrayList<>();
+            String input = args[1].toLowerCase();
+            
+            if ("true".startsWith(input)) {
+                suggestions.add("true");
+                return suggestions;
+            }
+            if ("false".startsWith(input)) {
+                suggestions.add("false");
+                return suggestions;
+            }
+            suggestions.add("true/false");
+            return suggestions;
+        }
+
+        return new ArrayList<>();
     }
 
     private @NotNull @Unmodifiable List<String> completePlayerName(String[] args) {
