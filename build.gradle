@@ -90,11 +90,18 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 processResources {
-    def props = [version: version]
+    def props = [
+            version: version,
+            gva: gva,
+            uu: uu
+    ]
     inputs.properties props
     filteringCharset 'UTF-8'
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     filesMatching('plugin.yml') {
+        expand props
+    }
+    filesMatching('settings.properties') {
         expand props
     }
     from sourceSets.main.resources.srcDirs

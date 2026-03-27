@@ -28,7 +28,7 @@ public class TabComplete implements TabCompleter{
         return switch (commandName) {
             case "warpadmin" -> completeAdminSubcommand(args);
             case "warp", "delwarp" -> completeWarpName(args);
-            case "setwarp" -> completeSetWarp(args);
+            case "setwarp", "publicwarp" -> completeSetWarp(args);
             default -> new ArrayList<>();
         };
 
@@ -80,8 +80,21 @@ public class TabComplete implements TabCompleter{
 
     private @NotNull List<String> completeSetWarp(String[] args) {
         if (args.length == 1) {
+            List<String> warps = WarpPlugin.lookupData("warps");
             List<String> suggestions = new ArrayList<>();
-            suggestions.add("[WarpName]");
+            for (String warp : warps) {
+                if (warp.toLowerCase().startsWith(args[args.length - 1].toLowerCase())) {
+                    boolean isPublic = WarpPlugin.checkData("warps." + warp + ".public") &&
+                            Boolean.parseBoolean(WarpPlugin.getData("warps." + warp + ".public"));
+                    boolean isCreator = sender.getName().equals(WarpPlugin.getData("warps." + warp + ".creator"));
+
+                    if (isPublic) {
+                        suggestions.add(warp);
+                    } else if (isCreator) {
+                        suggestions.add(warp);
+                    }
+                }
+            }
             return suggestions;
         }
 
@@ -89,15 +102,21 @@ public class TabComplete implements TabCompleter{
             List<String> suggestions = new ArrayList<>();
             String input = args[1].toLowerCase();
             
-            if ("true".startsWith(input)) {
+            // 当输入完全匹配 "true" 时，只显示 true
+            if (input.equals("true")) {
                 suggestions.add("true");
                 return suggestions;
             }
-            if ("false".startsWith(input)) {
+
+            // 当输入完全匹配 "false" 时，只显示 false
+            if (input.equals("false")) {
                 suggestions.add("false");
                 return suggestions;
             }
-            suggestions.add("true/false");
+            
+            // 参数为空或输入其他字母时，显示 true 和 false
+            suggestions.add("true");
+            suggestions.add("false");
             return suggestions;
         }
 

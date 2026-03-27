@@ -55,6 +55,7 @@ warps:
   'spawn':
     creator: Admin
     world: world
+    public: true
     x: 0.0
     y: 64.0
     z: 0.0
@@ -63,6 +64,7 @@ warps:
   'home':
     creator: Player123
     world: world_nether
+    public: false
     x: 100.5
     y: 50.0
     z: -200.3

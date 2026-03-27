@@ -45,12 +45,12 @@ public class SetWarp implements CommandExecutor {
 
         Location loc = player.getLocation();
         String warpName = args[0];
-        String perm = args[1];
+        boolean isPublic = Boolean.parseBoolean(args[1]);
         String path = "warps." + warpName;
 
         WarpPlugin.saveData(sender.getName(), path + ".creator");
         WarpPlugin.saveData(player.getWorld().getName(), path + ".world");
-        WarpPlugin.saveData(perm, path + ".public");
+        WarpPlugin.saveData(isPublic, path + ".public");
         WarpPlugin.saveData(loc.getX(), path + ".x");
         WarpPlugin.saveData(loc.getY(), path + ".y");
         WarpPlugin.saveData(loc.getZ(), path + ".z");
