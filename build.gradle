@@ -93,7 +93,9 @@ processResources {
     def props = [version: version]
     inputs.properties props
     filteringCharset 'UTF-8'
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     filesMatching('plugin.yml') {
         expand props
     }
+    from sourceSets.main.resources.srcDirs
 }
