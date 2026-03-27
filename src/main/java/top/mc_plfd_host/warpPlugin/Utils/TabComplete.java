@@ -28,7 +28,8 @@ public class TabComplete implements TabCompleter{
         return switch (commandName) {
             case "warpadmin" -> completeAdminSubcommand(args);
             case "warp", "delwarp" -> completeWarpName(args);
-            case "setwarp", "publicwarp" -> completeSetWarp(args);
+            case "publicwarp" -> completePublicWarp(args);
+            case "setwarp" -> completeSetWarp(args);
             default -> new ArrayList<>();
         };
 
@@ -78,7 +79,7 @@ public class TabComplete implements TabCompleter{
         return suggestions;
     }
 
-    private @NotNull List<String> completeSetWarp(String[] args) {
+    private @NotNull List<String> completePublicWarp(String[] args) {
         if (args.length == 1) {
             List<String> warps = WarpPlugin.lookupData("warps");
             List<String> suggestions = new ArrayList<>();
@@ -99,25 +100,19 @@ public class TabComplete implements TabCompleter{
         }
 
         if (args.length == 2) {
-            List<String> suggestions = new ArrayList<>();
-            String input = args[1].toLowerCase();
-            
-            // 当输入完全匹配 "true" 时，只显示 true
-            if (input.equals("true")) {
-                suggestions.add("true");
-                return suggestions;
-            }
+            return List.of("true", "false");
+        }
 
-            // 当输入完全匹配 "false" 时，只显示 false
-            if (input.equals("false")) {
-                suggestions.add("false");
-                return suggestions;
-            }
-            
-            // 参数为空或输入其他字母时，显示 true 和 false
-            suggestions.add("true");
-            suggestions.add("false");
-            return suggestions;
+        return new ArrayList<>();
+    }
+
+    private @NotNull List<String> completeSetWarp(String[] args) {
+        if (args.length == 1) {
+            return List.of("WarpName");
+        }
+
+        if (args.length == 2) {
+            return List.of("true", "false");
         }
 
         return new ArrayList<>();
