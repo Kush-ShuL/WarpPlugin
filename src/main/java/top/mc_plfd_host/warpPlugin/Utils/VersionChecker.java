@@ -13,11 +13,13 @@ import java.nio.charset.StandardCharsets;
 
 public class VersionChecker {
     private static final URL VERSION_URL;
+    private static final URL FALLBACK_VERSION_URL;
     private static final URL UPDATE_URL;
     private static final String CURRENT_VERSION;
 
     static {
         URL tempVersionUrl = null;
+        URL tempFallbackVersionUrl = null;
         URL tempUpdateUrl = null;
         
         try {
@@ -30,6 +32,15 @@ public class VersionChecker {
         }
 
         try {
+            String fallbackVersionApiUrl = WarpPlugin.getProperty("FALLBACK-VERSION-API");
+            if (!fallbackVersionApiUrl.equals("error!") && !fallbackVersionApiUrl.isEmpty()) {
+                tempFallbackVersionUrl = new URL(fallbackVersionApiUrl);
+            }
+        } catch (MalformedURLException e) {
+            Bukkit.getLogger().warning("[WP-VersionChecker] Invalid fallback version API URL!");
+        }
+
+        try {
             String updateUrlStr = WarpPlugin.getProperty("update-url");
             if (!updateUrlStr.equals("error!")) {
                 tempUpdateUrl = new URL(updateUrlStr);
@@ -39,53 +50,77 @@ public class VersionChecker {
         }
         
         VERSION_URL = tempVersionUrl;
+        FALLBACK_VERSION_URL = tempFallbackVersionUrl;
         UPDATE_URL = tempUpdateUrl;
         CURRENT_VERSION = WarpPlugin.version;
     }
 
     public static void checkUpdate() {
-        if (VERSION_URL == null) {
+        if (VERSION_URL == null && FALLBACK_VERSION_URL == null) {
             Bukkit.getLogger().warning("[WP-VersionChecker] Version API URL is not configured, skipping update check.");
             return;
         }
         
         Bukkit.getScheduler().runTaskAsynchronously(WarpPlugin.getInstance(), () -> {
-            try {
-                HttpURLConnection connection = (HttpURLConnection) VERSION_URL.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(5000);
-                connection.setReadTimeout(5000);
-                connection.setRequestProperty("Accept", "application/vnd.github.v3+json");
-                connection.setRequestProperty("User-Agent", "WarpPlugin-VersionChecker");
-                
-                int responseCode = connection.getResponseCode();
-                if (responseCode != HttpURLConnection.HTTP_OK) {
-                    Bukkit.getLogger().warning("[WP-VersionChecker] Failed to fetch version info. Response code: " + responseCode);
-                    return;
-                }
-                
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    
-                    String latestVersion = extractTagName(response.toString());
-                    if (latestVersion != null && !latestVersion.isEmpty()) {
-                        compareVersionsAndNotify(latestVersion);
-                    } else {
-                        Bukkit.getLogger().warning("[WP-VersionChecker] Could not parse latest version from response.");
-                    }
-                }
-            } catch (javax.net.ssl.SSLException e) {
-                Bukkit.getLogger().warning("[WP-VersionChecker] SSL certificate verification failed. This may be due to network environment or firewall.");
-                Bukkit.getLogger().warning("[WP-VersionChecker] Update check skipped. Error: " + e.getMessage());
-            } catch (IOException e) {
-                Bukkit.getLogger().warning("[WP-VersionChecker] Error checking for updates: " + e.getMessage());
+            // 首先尝试主 API
+            String latestVersion = fetchVersionFromAPI(VERSION_URL, "GitHub");
+            
+            // 如果主 API 失败，尝试后备 API
+            if (latestVersion == null && FALLBACK_VERSION_URL != null) {
+                Bukkit.getLogger().info("[WP-VersionChecker] Primary API failed, trying fallback API...");
+                latestVersion = fetchVersionFromAPI(FALLBACK_VERSION_URL, "Fallback");
+            }
+            
+            // 比较版本并通知
+            if (latestVersion != null && !latestVersion.isEmpty()) {
+                compareVersionsAndNotify(latestVersion);
+            } else {
+                Bukkit.getLogger().warning("[WP-VersionChecker] Could not fetch version from any API.");
             }
         });
+    }
+
+    private static String fetchVersionFromAPI(URL apiUrl, String apiName) {
+        if (apiUrl == null) {
+            return null;
+        }
+        
+        try {
+            HttpURLConnection connection = (HttpURLConnection) apiUrl.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("User-Agent", "WarpPlugin-VersionChecker");
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                Bukkit.getLogger().warning("[WP-VersionChecker] Failed to fetch version info from " + apiName + ". Response code: " + responseCode);
+                return null;
+            }
+            
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                
+                // 根据 API 类型解析版本号
+                if ("GitHub".equals(apiName)) {
+                    return extractTagName(response.toString());
+                } else if ("Fallback".equals(apiName)) {
+                    return extractModrinthVersion(response.toString());
+                }
+            }
+        } catch (javax.net.ssl.SSLException e) {
+            Bukkit.getLogger().warning("[WP-VersionChecker] SSL certificate verification failed for " + apiName + ". Error: " + e.getMessage());
+        } catch (IOException e) {
+            Bukkit.getLogger().warning("[WP-VersionChecker] Error fetching version from " + apiName + ": " + e.getMessage());
+        }
+        
+        return null;
     }
 
     private static String extractTagName(String jsonResponse) {
@@ -95,6 +130,31 @@ public class VersionChecker {
         }
         
         int colonIndex = jsonResponse.indexOf(':', tagIndex);
+        if (colonIndex == -1) {
+            return null;
+        }
+        
+        int quoteStart = jsonResponse.indexOf('"', colonIndex + 1);
+        if (quoteStart == -1) {
+            return null;
+        }
+        
+        int quoteEnd = jsonResponse.indexOf('"', quoteStart + 1);
+        if (quoteEnd == -1) {
+            return null;
+        }
+        
+        return jsonResponse.substring(quoteStart + 1, quoteEnd);
+    }
+
+    private static String extractModrinthVersion(String jsonResponse) {
+        // Modrinth API 返回的字段是 version_number
+        int versionIndex = jsonResponse.indexOf("\"version_number\"");
+        if (versionIndex == -1) {
+            return null;
+        }
+        
+        int colonIndex = jsonResponse.indexOf(':', versionIndex);
         if (colonIndex == -1) {
             return null;
         }

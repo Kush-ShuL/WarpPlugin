@@ -93,7 +93,8 @@ processResources {
     def props = [
             version: version,
             gva: gva,
-            uu: uu
+            uu: uu,
+            fva: fva
     ]
     inputs.properties props
     filteringCharset 'UTF-8'
