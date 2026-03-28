@@ -11,8 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import top.mc_plfd_host.warpPlugin.WarpPlugin;
 
-import java.util.Objects;
-
 public class Warp implements CommandExecutor {
     private static @Nullable Location getWarpLocation(String warpName, String worldName) {
         try {
