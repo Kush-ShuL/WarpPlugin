@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 import java.text.SimpleDateFormat
 
 plugins {
@@ -90,10 +92,14 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 processResources {
-    def props = [version: version]
+    def props = [
+            version: version,
+            gva: project.property('gva'),
+            uu: project.property('uu'),
+            fva: project.property('fva')
+    ]
     inputs.properties props
     filteringCharset 'UTF-8'
-    filesMatching('plugin.yml') {
-        expand props
-    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    filter(ReplaceTokens, tokens: props)
 }

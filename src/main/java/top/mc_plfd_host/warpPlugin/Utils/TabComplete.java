@@ -28,6 +28,7 @@ public class TabComplete implements TabCompleter{
         return switch (commandName) {
             case "warpadmin" -> completeAdminSubcommand(args);
             case "warp", "delwarp" -> completeWarpName(args);
+            case "publicwarp" -> completePublicWarp(args);
             case "setwarp" -> completeSetWarp(args);
             default -> new ArrayList<>();
         };
@@ -78,27 +79,40 @@ public class TabComplete implements TabCompleter{
         return suggestions;
     }
 
-    private @NotNull List<String> completeSetWarp(String[] args) {
+    private @NotNull List<String> completePublicWarp(String[] args) {
         if (args.length == 1) {
+            List<String> warps = WarpPlugin.lookupData("warps");
             List<String> suggestions = new ArrayList<>();
-            suggestions.add("[WarpName]");
+            for (String warp : warps) {
+                if (warp.toLowerCase().startsWith(args[args.length - 1].toLowerCase())) {
+                    boolean isPublic = WarpPlugin.checkData("warps." + warp + ".public") &&
+                            Boolean.parseBoolean(WarpPlugin.getData("warps." + warp + ".public"));
+                    boolean isCreator = sender.getName().equals(WarpPlugin.getData("warps." + warp + ".creator"));
+
+                    if (isPublic) {
+                        suggestions.add(warp);
+                    } else if (isCreator) {
+                        suggestions.add(warp);
+                    }
+                }
+            }
             return suggestions;
         }
 
         if (args.length == 2) {
-            List<String> suggestions = new ArrayList<>();
-            String input = args[1].toLowerCase();
-            
-            if ("true".startsWith(input)) {
-                suggestions.add("true");
-                return suggestions;
-            }
-            if ("false".startsWith(input)) {
-                suggestions.add("false");
-                return suggestions;
-            }
-            suggestions.add("true/false");
-            return suggestions;
+            return List.of("true", "false");
+        }
+
+        return new ArrayList<>();
+    }
+
+    private @NotNull List<String> completeSetWarp(String[] args) {
+        if (args.length == 1) {
+            return List.of("WarpName");
+        }
+
+        if (args.length == 2) {
+            return List.of("true", "false");
         }
 
         return new ArrayList<>();

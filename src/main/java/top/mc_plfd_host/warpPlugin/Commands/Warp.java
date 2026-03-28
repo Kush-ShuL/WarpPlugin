@@ -11,8 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import top.mc_plfd_host.warpPlugin.WarpPlugin;
 
-import java.util.Objects;
-
 public class Warp implements CommandExecutor {
     private static @Nullable Location getWarpLocation(String warpName, String worldName) {
         try {
@@ -58,10 +56,23 @@ public class Warp implements CommandExecutor {
 
         if (sender.hasPermission("warpplugin.warpall")){
             try {
-                player.teleport(Objects.requireNonNull(getWarpLocation(args[0], worldName)));
-                sender.sendMessage(WarpPlugin.getMessages("success"));
+                Location loc = getWarpLocation(args[0], worldName);
+                if (loc == null) {
+                    sender.sendMessage(WarpPlugin.getMessages("error"));
+                    return true;
+                }
+                if (WarpPlugin.isFolia()) {
+                    final Player finalPlayer = player;
+                    WarpPlugin.runTask(() -> {
+                        finalPlayer.teleport(loc);
+                        sender.sendMessage(WarpPlugin.getMessages("success"));
+                    });
+                } else {
+                    player.teleport(loc);
+                    sender.sendMessage(WarpPlugin.getMessages("success"));
+                }
                 return true;
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 sender.sendMessage(WarpPlugin.getMessages("error"));
                 Bukkit.getLogger().warning("[WarpPlugin] " + e.getMessage());
                 return true;
@@ -70,9 +81,22 @@ public class Warp implements CommandExecutor {
 
         if (sender.hasPermission("warpplugin.warp." + args[0])){
             try {
-                player.teleport(Objects.requireNonNull(getWarpLocation(args[0], worldName)));
-                sender.sendMessage(WarpPlugin.getMessages("success"));
-            } catch (NullPointerException e) {
+                Location loc = getWarpLocation(args[0], worldName);
+                if (loc == null) {
+                    sender.sendMessage(WarpPlugin.getMessages("error"));
+                    return true;
+                }
+                if (WarpPlugin.isFolia()) {
+                    final Player finalPlayer = player;
+                    WarpPlugin.runTask(() -> {
+                        finalPlayer.teleport(loc);
+                        sender.sendMessage(WarpPlugin.getMessages("success"));
+                    });
+                } else {
+                    player.teleport(loc);
+                    sender.sendMessage(WarpPlugin.getMessages("success"));
+                }
+            } catch (Exception e) {
                 sender.sendMessage(WarpPlugin.getMessages("error"));
                 Bukkit.getLogger().warning("[WarpPlugin] " + e.getMessage());
                 return true;
