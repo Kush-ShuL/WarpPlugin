@@ -3,6 +3,12 @@ package top.mc_plfd_host.warpPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServerCommandEvent;
+import org.bukkit.event.server.ServerLoadEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
@@ -82,6 +88,13 @@ public final class WarpPlugin extends JavaPlugin {
         Objects.requireNonNull(getCommand("publicwarp")).setTabCompleter(new TabComplete());
         getLogger().info("[WarpPlugin] Enabled!");
         VersionChecker.checkUpdate();
+
+        // 执行初始重载以加载最新配置
+        if (WarpPlugin.reload()) {
+            getLogger().info("[WarpPlugin] Configuration loaded successfully!");
+        }
+
+        Bukkit.getPluginManager().registerEvents(new ReloadListener(), this);
     }
 
     @Override
@@ -151,6 +164,36 @@ public final class WarpPlugin extends JavaPlugin {
             Bukkit.getLogger().warning("[WarpPlugin] Failed to reload! There is a problem with the configuration file.");
             Bukkit.getLogger().warning(e.getMessage());
             return false;
+        }
+    }
+}
+
+class ReloadListener implements Listener {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onServerLoad(ServerLoadEvent event) {
+        boolean success = WarpPlugin.reload();
+        if (success) {
+            WarpPlugin.getInstance().getLogger().info("[WarpPlugin] Reloaded successfully!");
+        } else {
+            WarpPlugin.getInstance().getLogger().warning("[WarpPlugin] Failed to reload! Please check configuration files.");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
+        String command = event.getMessage().toLowerCase();
+        if (command.equals("/reload") || command.startsWith("/reload ")) {
+            // 标记需要在插件重启用时重新加载配置
+            Bukkit.getScheduler().runTaskLater(WarpPlugin.getInstance(), () -> WarpPlugin.getInstance().getLogger().info("Detected /reload command. Configuration will be reloaded on plugin reload."), 1L);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onServerCommand(ServerCommandEvent event) {
+        String command = event.getCommand().toLowerCase();
+        if (command.equals("reload") || command.startsWith("reload ")) {
+            // 标记需要在插件重启用时重新加载配置
+            Bukkit.getScheduler().runTaskLater(WarpPlugin.getInstance(), () -> WarpPlugin.getInstance().getLogger().info("Detected /reload command from console. Configuration will be reloaded on plugin reload."), 1L);
         }
     }
 }
