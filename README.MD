@@ -1,5 +1,10 @@
 # WarpPlugin
 
+[![License](https://img.shields.io/github/license/Kush-ShuL/WarpPlugin)](License)
+[![Release](https://img.shields.io/github/v/release/Kush-ShuL/WarpPlugin)](https://github.com/Kush-ShuL/WarpPlugin/releases)
+[![Issues](https://img.shields.io/github/issues/Kush-ShuL/WarpPlugin)](https://github.com/Kush-ShuL/WarpPlugin/issues)
+[![LatestUpdate](LatestUpdate.png)](https://github.com/VoyagerStar3897081534/WarpPlugin)
+
 A simple and powerful warp/teleport management plugin for Minecraft servers.
 
 ## Features
