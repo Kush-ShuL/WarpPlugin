@@ -25,7 +25,7 @@ list_warps: |
   &7Owner:&a%owner% 
   &7World:&b%world% 
   &7Position:&e%pos% 
-  &7Name:&6%name%"
+  &7Name:&6%name%
   &7----------------
 
 no_data: "&cNo data found!"
