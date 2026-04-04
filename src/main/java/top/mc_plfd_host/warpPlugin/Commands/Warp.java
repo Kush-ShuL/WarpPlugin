@@ -9,26 +9,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import top.mc_plfd_host.warpPlugin.Utils.WarpUnits;
 import top.mc_plfd_host.warpPlugin.WarpPlugin;
 
 public class Warp implements CommandExecutor {
-    private static @Nullable Location getWarpLocation(String warpName, String worldName) {
-        try {
-            World world = Bukkit.getWorld(worldName);
-            if (world == null) return null;
 
-            double x = Double.parseDouble(WarpPlugin.getData("warps." + warpName + ".x"));
-            double y = Double.parseDouble(WarpPlugin.getData("warps." + warpName + ".y"));
-            double z = Double.parseDouble(WarpPlugin.getData("warps." + warpName + ".z"));
-            float yaw = Float.parseFloat(WarpPlugin.getData("warps." + warpName + ".yaw"));
-            float pitch = Float.parseFloat(WarpPlugin.getData("warps." + warpName + ".pitch"));
-
-            return new Location(world, x, y, z, yaw, pitch);
-        } catch (Exception e) {
-            Bukkit.getLogger().warning("[WarpPlugin] " + e.getMessage());
-            return null;
-        }
-    }
 
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
@@ -56,7 +41,7 @@ public class Warp implements CommandExecutor {
 
         if (sender.hasPermission("warpplugin.warpall")){
             try {
-                Location loc = getWarpLocation(args[0], worldName);
+                Location loc = WarpUnits.getWarpLocation(args[0], worldName);
                 if (loc == null) {
                     sender.sendMessage(WarpPlugin.getMessages("error"));
                     return true;
@@ -81,7 +66,7 @@ public class Warp implements CommandExecutor {
 
         if (sender.hasPermission("warpplugin.warp." + args[0])){
             try {
-                Location loc = getWarpLocation(args[0], worldName);
+                Location loc = WarpUnits.getWarpLocation(args[0], worldName);
                 if (loc == null) {
                     sender.sendMessage(WarpPlugin.getMessages("error"));
                     return true;

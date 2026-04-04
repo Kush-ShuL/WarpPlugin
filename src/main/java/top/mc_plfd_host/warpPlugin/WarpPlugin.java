@@ -17,12 +17,11 @@ import top.mc_plfd_host.warpPlugin.Utils.TabComplete;
 import top.mc_plfd_host.warpPlugin.Utils.VersionChecker;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.InputStream;
-import java.util.Properties;
 
 public final class WarpPlugin extends JavaPlugin {
     private static WarpPlugin instance;
@@ -129,6 +128,10 @@ public final class WarpPlugin extends JavaPlugin {
         return Objects.requireNonNullElse(raw, "error!");
     }
 
+    public static Set<String> getAllKeys() {
+        return data.getKeys(true);
+    }
+
     public static double getDataDouble(String path) {
         return data.getDouble(path);
     }
@@ -179,7 +182,6 @@ public final class WarpPlugin extends JavaPlugin {
     public static boolean isFolia() {
         return isFolia;
     }
-
     public static void runTask(Runnable task) {
         if (isFolia) {
             // Folia - 使用反射调用 getGlobalRegionScheduler()
@@ -190,9 +192,11 @@ public final class WarpPlugin extends JavaPlugin {
                 Class<?> schedulerClass = scheduler.getClass();
                 java.lang.reflect.Method runMethod = schedulerClass.getMethod("run", JavaPlugin.class, java.util.function.Consumer.class);
                 runMethod.invoke(scheduler, instance, (java.util.function.Consumer<Object>) plugin -> task.run());
-            } catch (Exception e) {
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 // 如果反射失败，回退到 Bukkit 调度器
                 Bukkit.getScheduler().runTask(instance, task);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         } else {
             // Bukkit/Paper - 使用 BukkitScheduler
@@ -235,7 +239,7 @@ class ReloadListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
+    public void onPlayerCommand(@NotNull PlayerCommandPreprocessEvent event) {
         String command = event.getMessage().toLowerCase();
         if (command.equals("/reload") || command.startsWith("/reload ")) {
             WarpPlugin.runTaskLater(() -> WarpPlugin.getInstance().getLogger().info("Detected /reload command. Configuration will be reloaded on plugin reload."), 1L);
@@ -243,7 +247,7 @@ class ReloadListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onServerCommand(ServerCommandEvent event) {
+    public void onServerCommand(@NotNull ServerCommandEvent event) {
         String command = event.getCommand().toLowerCase();
         if (command.equals("reload") || command.startsWith("reload ")) {
             WarpPlugin.runTaskLater(() -> WarpPlugin.getInstance().getLogger().info("Detected /reload command from console. Configuration will be reloaded on plugin reload."), 1L);
